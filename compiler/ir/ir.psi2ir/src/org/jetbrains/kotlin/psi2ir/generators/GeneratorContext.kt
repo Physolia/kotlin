@@ -15,10 +15,13 @@ import org.jetbrains.kotlin.descriptors.NotFoundClasses
 import org.jetbrains.kotlin.ir.IrBuiltIns
 import org.jetbrains.kotlin.ir.builders.IrGeneratorContext
 import org.jetbrains.kotlin.ir.expressions.IrDeclarationReference
+import org.jetbrains.kotlin.ir.expressions.IrLoop
 import org.jetbrains.kotlin.ir.symbols.IrValueParameterSymbol
 import org.jetbrains.kotlin.ir.util.SymbolTable
 import org.jetbrains.kotlin.ir.util.TypeTranslator
+import org.jetbrains.kotlin.psi.KtExpression
 import org.jetbrains.kotlin.psi.KtFile
+import org.jetbrains.kotlin.psi.KtLoopExpression
 import org.jetbrains.kotlin.psi2ir.Psi2IrConfiguration
 import org.jetbrains.kotlin.psi2ir.generators.fragments.FragmentContext
 import org.jetbrains.kotlin.resolve.BindingContext
@@ -84,5 +87,19 @@ class GeneratorContext private constructor(
             callToSubstitutedDescriptorMap,
             fragmentContext,
         )
+    }
+
+    val loopTable = HashMap<KtLoopExpression, IrLoop>()
+
+    fun getLoop(expression: KtExpression): IrLoop? =
+        loopTable[expression]
+
+    inline fun <R> withLoop(expression: KtLoopExpression, irLoop: IrLoop, body: () -> R): R {
+        loopTable[expression] = irLoop
+        return try {
+            body()
+        } finally {
+            loopTable.remove(expression)
+        }
     }
 }

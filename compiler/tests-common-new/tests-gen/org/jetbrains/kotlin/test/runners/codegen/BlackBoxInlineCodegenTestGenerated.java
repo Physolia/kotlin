@@ -2953,6 +2953,12 @@ public class BlackBoxInlineCodegenTestGenerated extends AbstractBlackBoxInlineCo
         }
 
         @Test
+        @TestMetadata("breakContinue.kt")
+        public void testBreakContinue() throws Exception {
+            runTest("compiler/testData/codegen/boxInline/nonLocalReturns/breakContinue.kt");
+        }
+
+        @Test
         @TestMetadata("explicitLocalReturn.kt")
         public void testExplicitLocalReturn() throws Exception {
             runTest("compiler/testData/codegen/boxInline/nonLocalReturns/explicitLocalReturn.kt");

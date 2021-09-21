@@ -2378,6 +2378,11 @@ public class IrJsCodegenInlineES6TestGenerated extends AbstractIrJsCodegenInline
             KtTestUtil.assertAllTestsPresentByMetadataWithExcluded(this.getClass(), new File("compiler/testData/codegen/boxInline/nonLocalReturns"), Pattern.compile("^(.+)\\.kt$"), null, TargetBackend.JS_IR_ES6, true);
         }
 
+        @TestMetadata("breakContinue.kt")
+        public void testBreakContinue() throws Exception {
+            runTest("compiler/testData/codegen/boxInline/nonLocalReturns/breakContinue.kt");
+        }
+
         @TestMetadata("explicitLocalReturn.kt")
         public void testExplicitLocalReturn() throws Exception {
             runTest("compiler/testData/codegen/boxInline/nonLocalReturns/explicitLocalReturn.kt");

@@ -35,20 +35,16 @@ class LoopExpressionGenerator(statementGenerator: StatementGenerator) : Statemen
             ktWhile.startOffsetSkippingComments, ktWhile.endOffset,
             context.irBuiltIns.unitType, IrStatementOrigin.WHILE_LOOP
         )
-
-        irLoop.condition = ktWhile.condition!!.genExpr()
-
-        statementGenerator.bodyGenerator.putLoop(ktWhile, irLoop)
-
         irLoop.label = getLoopLabel(ktWhile)
-
-        irLoop.body = ktWhile.body?.let { ktLoopBody ->
-            if (ktLoopBody is KtBlockExpression)
-                generateWhileLoopBody(ktLoopBody)
-            else
-                ktLoopBody.genExpr()
+        irLoop.condition = ktWhile.condition!!.genExpr()
+        context.withLoop(ktWhile, irLoop) {
+            irLoop.body = ktWhile.body?.let { ktLoopBody ->
+                if (ktLoopBody is KtBlockExpression)
+                    generateWhileLoopBody(ktLoopBody)
+                else
+                    ktLoopBody.genExpr()
+            }
         }
-
         return irLoop
     }
 
@@ -58,18 +54,17 @@ class LoopExpressionGenerator(statementGenerator: StatementGenerator) : Statemen
             context.irBuiltIns.unitType, IrStatementOrigin.DO_WHILE_LOOP
         )
 
-        statementGenerator.bodyGenerator.putLoop(ktDoWhile, irLoop)
-
         irLoop.label = getLoopLabel(ktDoWhile)
 
-        irLoop.body = ktDoWhile.body?.let { ktLoopBody ->
-            if (ktLoopBody is KtBlockExpression)
-                generateDoWhileLoopBody(ktLoopBody)
-            else
-                ktLoopBody.genExpr()
+        context.withLoop(ktDoWhile, irLoop) {
+            irLoop.body = ktDoWhile.body?.let { ktLoopBody ->
+                if (ktLoopBody is KtBlockExpression)
+                    generateDoWhileLoopBody(ktLoopBody)
+                else
+                    ktLoopBody.genExpr()
+            }
+            irLoop.condition = ktDoWhile.condition!!.genExpr()
         }
-
-        irLoop.condition = ktDoWhile.condition!!.genExpr()
 
         return IrBlockImpl(ktDoWhile.startOffsetSkippingComments, ktDoWhile.endOffset, context.irBuiltIns.unitType).apply {
             statements.add(irLoop)
@@ -116,34 +111,29 @@ class LoopExpressionGenerator(statementGenerator: StatementGenerator) : Statemen
     private fun getLoopLabel(ktLoop: KtLoopExpression): String? =
         (ktLoop.parent as? KtLabeledExpression)?.getLabelName()
 
+    private fun KtLoopExpression.hasLabel(label: String): Boolean {
+        var parent = this.parent
+        while (parent is KtLabeledExpression) {
+            if (label == parent.getLabelName()) {
+                return true
+            }
+            parent = parent.parent
+        }
+        return false
+    }
+
     private fun findParentLoop(ktWithLabel: KtExpressionWithLabel): IrLoop? =
         findParentLoop(ktWithLabel, ktWithLabel.getLabelName())
 
     private fun findParentLoop(ktExpression: KtExpression, targetLabel: String?): IrLoop? {
-        var finger: KtExpression? = ktExpression
-        BY_LOOP_EXPRESSIONS@ while (finger != null) {
-            finger = finger.getParentOfType<KtLoopExpression>(true)
-            if (finger == null) {
-                break
-            }
-            if (targetLabel == null) {
-                return getLoop(finger) ?: continue@BY_LOOP_EXPRESSIONS
-            } else {
-                var parent = finger.parent
-                while (parent is KtLabeledExpression) {
-                    val label = parent.getLabelName()!!
-                    if (targetLabel == label) {
-                        return getLoop(finger) ?: continue@BY_LOOP_EXPRESSIONS
-                    }
-                    parent = parent.parent
-                }
+        var finger = ktExpression
+        while (true) {
+            finger = finger.getParentOfType<KtLoopExpression>(true) ?: return null
+            if (targetLabel == null || finger.hasLabel(targetLabel)) {
+                // `null` is valid here: `while (break) {}` breaks from an outer loop, not from itself.
+                return context.loopTable[finger] ?: continue
             }
         }
-        return null
-    }
-
-    private fun getLoop(ktLoop: KtLoopExpression): IrLoop? {
-        return statementGenerator.bodyGenerator.getLoop(ktLoop)
     }
 
     fun generateForLoop(ktFor: KtForExpression): IrExpression {
@@ -174,7 +164,6 @@ class LoopExpressionGenerator(statementGenerator: StatementGenerator) : Statemen
 
         val irInnerWhile = IrWhileLoopImpl(startOffset, endOffset, context.irBuiltIns.unitType, IrStatementOrigin.FOR_LOOP_INNER_WHILE)
         irInnerWhile.label = getLoopLabel(ktFor)
-        statementGenerator.bodyGenerator.putLoop(ktFor, irInnerWhile)
         irForBlock.statements.add(irInnerWhile)
 
         val hasNextCall = statementGenerator.pregenerateCall(hasNextResolvedCall)
@@ -210,9 +199,8 @@ class LoopExpressionGenerator(statementGenerator: StatementGenerator) : Statemen
         }
 
         if (ktForBody != null) {
-            irInnerBody.statements.add(ktForBody.genExpr())
+            irInnerBody.statements.add(context.withLoop(ktFor, irInnerWhile) { ktForBody.genExpr() })
         }
-
         return irForBlock
     }
 }

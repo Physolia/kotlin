@@ -48,7 +48,6 @@ class BodyGenerator(
     private fun KotlinType.toIrType() = typeTranslator.translateType(this)
 
     override val scope = Scope(scopeOwnerSymbol)
-    private val loopTable = HashMap<KtLoopExpression, IrLoop>()
 
     fun generateFunctionBody(ktBody: KtExpression): IrBody {
         val statementGenerator = createStatementGenerator()
@@ -167,13 +166,6 @@ class BodyGenerator(
     }
 
     fun createStatementGenerator() = StatementGenerator(this, scope)
-
-    fun putLoop(expression: KtLoopExpression, irLoop: IrLoop) {
-        loopTable[expression] = irLoop
-    }
-
-    fun getLoop(expression: KtExpression): IrLoop? =
-        loopTable[expression]
 
     fun generatePrimaryConstructorBody(ktClassOrObject: KtPureClassOrObject): IrBody {
         val irBlockBody = context.irFactory.createBlockBody(ktClassOrObject.pureStartOffset, ktClassOrObject.pureEndOffset)
