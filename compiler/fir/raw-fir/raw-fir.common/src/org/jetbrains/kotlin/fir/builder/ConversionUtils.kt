@@ -36,6 +36,7 @@ import org.jetbrains.kotlin.fir.types.builder.buildResolvedTypeRef
 import org.jetbrains.kotlin.fir.types.impl.*
 import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.name.Name
+import org.jetbrains.kotlin.psi.KtAnnotated
 import org.jetbrains.kotlin.types.ConstantValueKind
 import org.jetbrains.kotlin.types.expressions.OperatorConventions
 import org.jetbrains.kotlin.util.OperatorNameConventions
@@ -279,7 +280,13 @@ fun generateResolvedAccessExpression(source: FirSourceElement?, variable: FirVar
     }
 
 fun generateTemporaryVariable(
-    moduleData: FirModuleData, source: FirSourceElement?, name: Name, initializer: FirExpression, typeRef: FirTypeRef? = null,
+    moduleData: FirModuleData,
+    source: FirSourceElement?,
+    name: Name,
+    initializer: FirExpression,
+    typeRef: FirTypeRef? = null,
+    extractedAnnotations: Collection<FirAnnotation>? = null,
+    extractAnnotationsTo: (KtAnnotated.(FirAnnotationContainerBuilder) -> Unit) = {},
 ): FirVariable =
     buildProperty {
         this.source = source
@@ -294,11 +301,32 @@ fun generateTemporaryVariable(
         isVar = false
         isLocal = true
         status = FirDeclarationStatusImpl(Visibilities.Local, Modality.FINAL)
+        if (extractedAnnotations != null) {
+            // LT extracts annotations ahead.
+            annotations.addAll(extractedAnnotations)
+        } else {
+            // PSI extracts annotations on demand.
+            (source.psi as? KtAnnotated)?.let { it.extractAnnotationsTo(this) }
+        }
     }
 
 fun generateTemporaryVariable(
-    moduleData: FirModuleData, source: FirSourceElement?, specialName: String, initializer: FirExpression,
-): FirVariable = generateTemporaryVariable(moduleData, source, Name.special("<$specialName>"), initializer)
+    moduleData: FirModuleData,
+    source: FirSourceElement?,
+    specialName: String,
+    initializer: FirExpression,
+    extractedAnnotations: Collection<FirAnnotation>? = null,
+    extractAnnotationsTo: (KtAnnotated.(FirAnnotationContainerBuilder) -> Unit) = {},
+): FirVariable =
+    generateTemporaryVariable(
+        moduleData,
+        source,
+        Name.special("<$specialName>"),
+        initializer,
+        null,
+        extractedAnnotations,
+        extractAnnotationsTo
+    )
 
 val FirClassBuilder.ownerRegularOrAnonymousObjectSymbol
     get() = when (this) {
