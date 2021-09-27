@@ -54,7 +54,7 @@ L0:
     mark(let { if (flag) { s.add(it) } else { s.remove(it) } return true })
     call(let { if (flag) { s.add(it) } else { s.remove(it) } return true }, let|<v2>, <v3>) -> <v4>
 L4 [before inlined declaration]:
-    inlined({ if (flag) { s.add(it) } else { s.remove(it) } return true })                                                                            NEXT:[<SINK>]
+    inlined({ if (flag) { s.add(it) } else { s.remove(it) } return true })                                                                            NEXT:[<END>, <SINK>]
 L3 [result of call]:
 L5 [after inlined declaration]:
     jmp?(L2)                                                                                                                                          NEXT:[mark({ name?.hashCode() }), r(false) -> <v5>]                                                                                                                        PREV:[jf(L3)]
@@ -88,7 +88,7 @@ L14 [skipFinallyToErrorBlock]:
 L16 [copy of L11, result of call]:
 - 2 merge(try { name?.let { if (flag) { s.add(it) } else { s.remove(it) } return true } return false } finally { name?.hashCode() }|!<v6>) -> <v7>    PREV:[]
 L1:
-  1 <END>                                                                                                                                             NEXT:[<SINK>]                                                                                                                                                              PREV:[ret(*|<v10>) L1, ret(*|<v5>) L1]
+  1 <END>                                                                                                                                             NEXT:[<SINK>]                                                                                                                                                              PREV:[ret(*|<v10>) L1, ret(*|<v5>) L1, inlined({ if (flag) { s.add(it) } else { s.remove(it) } return true })]
 error:
     <ERROR>                                                                                                                                           PREV:[jmp(error)]
 sink:

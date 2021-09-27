@@ -1,0 +1,39 @@
+== foo ==
+inline fun foo(x: () -> Unit): Unit = TODO()
+---------------------
+         <v0>: {<: () -> Unit}   NEW: magic[FAKE_INITIALIZER](x: () -> Unit) -> <v0>
+TODO()   <v1>: Unit              NEW: call(TODO(), TODO) -> <v1>
+=====================
+== test ==
+fun test() {
+    loop@ while (true) {
+        foo { break@loop }
+        foo { continue@loop }
+    }
+    1
+}
+---------------------
+                                                                        <v1>: *                 NEW: magic[VALUE_CONSUMER](true|<v0>) -> <v1>
+true                                                                    <v0>: Boolean           NEW: r(true) -> <v0>
+{ break@loop }                                                          <v2>: {<: () -> Unit}   NEW: r({ break@loop }) -> <v2>
+foo { break@loop }                                                      <v3>: *                 NEW: call(foo { break@loop }, foo|<v2>) -> <v3>
+{ continue@loop }                                                       <v4>: {<: () -> Unit}   NEW: r({ continue@loop }) -> <v4>
+foo { continue@loop }                                                   <v5>: *                 NEW: call(foo { continue@loop }, foo|<v4>) -> <v5>
+{ foo { break@loop } foo { continue@loop } }                            <v5>: *                 COPY
+while (true) { foo { break@loop } foo { continue@loop } }               !<v6>: *
+loop@ while (true) { foo { break@loop } foo { continue@loop } }         !<v6>: *                COPY
+1                                                                       <v7>: *                 NEW: r(1) -> <v7>
+{ loop@ while (true) { foo { break@loop } foo { continue@loop } } 1 }   <v7>: *                 COPY
+=====================
+== anonymous_0 ==
+{ break@loop }
+---------------------
+break@loop   !<v0>: *
+break@loop   !<v0>: *   COPY
+=====================
+== anonymous_1 ==
+{ continue@loop }
+---------------------
+continue@loop   !<v0>: *
+continue@loop   !<v0>: *   COPY
+=====================

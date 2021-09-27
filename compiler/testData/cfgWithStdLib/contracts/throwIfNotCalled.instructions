@@ -94,16 +94,16 @@ L0:
     mark(myRun outer@ { unknownRun { myRun { x = 42 return@outer } } throw java.lang.IllegalArgumentException() })
     call(myRun outer@ { unknownRun { myRun { x = 42 return@outer } } throw java.lang.IllegalArgumentException() }, myRun|<v0>) -> <v1>
 L2 [before inlined declaration]:
-    inlined({ unknownRun { myRun { x = 42 return@outer } } throw java.lang.IllegalArgumentException() })
+    inlined({ unknownRun { myRun { x = 42 return@outer } } throw java.lang.IllegalArgumentException() })                                                                     NEXT:[<SINK>]
 L3 [after inlined declaration]:
-    mark(println(<)
-    magic[UNRESOLVED_CALL](println(<|!<v2>) -> <v3>
+-   mark(println(<)                                                                                                                                                          PREV:[]
+-   magic[UNRESOLVED_CALL](println(<|!<v2>) -> <v3>                                                                                                                          PREV:[]
 L1:
-  1 <END>                                                                                                                                                                    NEXT:[<SINK>]
+  1 <END>                                                                                                                                                                    NEXT:[<SINK>]                                                                                                                                                                   PREV:[]
 error:
     <ERROR>                                                                                                                                                                  PREV:[]
 sink:
-    <SINK>                                                                                                                                                                   PREV:[<ERROR>, <END>]
+    <SINK>                                                                                                                                                                   PREV:[<ERROR>, <END>, inlined({ unknownRun { myRun { x = 42 return@outer } } throw java.lang.IllegalArgumentException() })]
 =====================
 == inlined anonymous_1 ==
 {
@@ -132,11 +132,11 @@ L6 [after local declaration]:
     call(IllegalArgumentException(), <init>) -> <v2>
     throw (throw java.lang.IllegalArgumentException()|<v2>)                                          NEXT:[<ERROR>]
 L5:
-  3 <END>                                                                                            NEXT:[<SINK>]                                                                                           PREV:[ret L5]
+- 3 <END>                                                                                            NEXT:[<SINK>]                                                                                           PREV:[]
 error:
     <ERROR>                                                                                          PREV:[throw (throw java.lang.IllegalArgumentException()|<v2>)]
 sink:
-    <SINK>                                                                                           PREV:[<ERROR>, <END>, d({ myRun { x = 42 return@outer } })]
+    <SINK>                                                                                           PREV:[<ERROR>, d({ myRun { x = 42 return@outer } })]
 =====================
 == anonymous_2 ==
 {
@@ -154,7 +154,7 @@ L7:
     mark(myRun { x = 42 return@outer })
     call(myRun { x = 42 return@outer }, myRun|<v0>) -> <v1>
 L9 [before inlined declaration]:
-    inlined({ x = 42 return@outer })                           NEXT:[<SINK>]
+    inlined({ x = 42 return@outer })                           NEXT:[<SINK>, <SINK>]
 L8:
 L10 [after inlined declaration]:
   5 <END>                                                      NEXT:[<SINK>]                                                     PREV:[]
@@ -174,11 +174,11 @@ L11:
   8 mark(x = 42 return@outer)
     r(42) -> <v0>
     w(x|<v0>)
-    ret L5                       NEXT:[<END>]
+    ret L5                       NEXT:[<SINK>]
 L12:
 - 7 <END>                        NEXT:[<SINK>]                       PREV:[]
 error:
 -   <ERROR>                      PREV:[]
 sink:
--   <SINK>                       PREV:[]
+    <SINK>                       PREV:[ret L5]
 =====================

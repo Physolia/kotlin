@@ -34,7 +34,7 @@ L0:
     v(val localResult = doCall { return nonLocal //unreachable })
     mark({ return nonLocal //unreachable })
     jmp?(L2)                                                                                                                     NEXT:[r({ return nonLocal //unreachable }) -> <v1>, d({ return nonLocal //unreachable })]
-    d({ return nonLocal //unreachable })                                                                                         NEXT:[<SINK>]
+    d({ return nonLocal //unreachable })                                                                                         NEXT:[<END>, <SINK>]
 L2 [after local declaration]:
     r({ return nonLocal //unreachable }) -> <v1>                                                                                 PREV:[jmp?(L2)]
     mark(doCall { return nonLocal //unreachable })
@@ -45,7 +45,7 @@ L2 [after local declaration]:
     magic[STRING_TEMPLATE]("NON_LOCAL_FAILED $localResult"|<v3>) -> <v4>
     ret(*|<v4>) L1
 L1:
-  1 <END>                                                                                                                        NEXT:[<SINK>]                                                                                                                       PREV:[ret(*|<v0>) L1, ret(*|<v4>) L1]
+  1 <END>                                                                                                                        NEXT:[<SINK>]                                                                                                                       PREV:[d({ return nonLocal //unreachable }), ret(*|<v4>) L1]
 error:
     <ERROR>                                                                                                                      PREV:[]
 sink:
@@ -60,13 +60,13 @@ L3:
   3 <START>
   4 mark(return nonLocal //unreachable)
     r(nonLocal) -> <v0>
-    ret(*|<v0>) L1                         NEXT:[<END>]
+    ret(*|<v0>) L1                         NEXT:[<SINK>]
 L4:
   3 <END>                                  NEXT:[<SINK>]                                 PREV:[]
 error:
     <ERROR>                                PREV:[]
 sink:
-    <SINK>                                 PREV:[<ERROR>, <END>]
+    <SINK>                                 PREV:[<ERROR>, <END>, ret(*|<v0>) L1]
 =====================
 == doSomething ==
 fun doSomething() {}
@@ -102,7 +102,7 @@ L2 [after local declaration]:
     r(null) -> <v0>
     mark({ return })
     jmp?(L6)                                                                                        NEXT:[r({ return }) -> <v1>, d({ return })]
-    d({ return })                                                                                   NEXT:[<SINK>]
+    d({ return })                                                                                   NEXT:[<END>, <SINK>]
 L6 [after local declaration]:
     r({ return }) -> <v1>                                                                           PREV:[jmp?(L6)]
     mark(let { return })
@@ -113,7 +113,7 @@ L5 [result of call]:
     mark(doSomething())
     call(doSomething(), doSomething) -> <v4>
 L1:
-  1 <END>                                                                                           NEXT:[<SINK>]                                                                                          PREV:[ret L1, call(doSomething(), doSomething) -> <v4>]
+  1 <END>                                                                                           NEXT:[<SINK>]                                                                                          PREV:[d({ return }), call(doSomething(), doSomething) -> <v4>]
 error:
     <ERROR>                                                                                         PREV:[]
 sink:
@@ -142,14 +142,14 @@ sink:
 L7:
   3 <START>
   4 mark(return)
-    ret L1             NEXT:[<END>]
+    ret L1             NEXT:[<SINK>]
 - 3 ret(*|!<v0>) L8    PREV:[]
 L8:
     <END>              NEXT:[<SINK>]          PREV:[]
 error:
     <ERROR>            PREV:[]
 sink:
-    <SINK>             PREV:[<ERROR>, <END>]
+    <SINK>             PREV:[<ERROR>, <END>, ret L1]
 =====================
 == test3 ==
 fun test3(x: Any?): Boolean =
@@ -167,7 +167,7 @@ L0:
     r(x) -> <v1>
     mark({ return true })
     jmp?(L3)                                                     NEXT:[r({ return true }) -> <v2>, d({ return true })]
-    d({ return true })                                           NEXT:[<SINK>]
+    d({ return true })                                           NEXT:[<END>, <SINK>]
 L3 [after local declaration]:
     r({ return true }) -> <v2>                                   PREV:[jmp?(L3)]
     mark(let { return true })
@@ -180,7 +180,7 @@ L6 [after elvis operator]:
     merge(x?.let { return true } ?: false|<v3>, <v4>) -> <v5>    PREV:[jt(L6|<v3>), r(false) -> <v4>]
     ret(*|<v5>) L1
 L1:
-    <END>                                                        NEXT:[<SINK>]                                                                         PREV:[ret(*|<v0>) L1, ret(*|<v5>) L1]
+    <END>                                                        NEXT:[<SINK>]                                                                         PREV:[d({ return true }), ret(*|<v5>) L1]
 error:
     <ERROR>                                                      PREV:[]
 sink:
@@ -195,12 +195,12 @@ L4:
   2 <START>
   3 mark(return true)
     r(true) -> <v0>
-    ret(*|<v0>) L1       NEXT:[<END>]
+    ret(*|<v0>) L1       NEXT:[<SINK>]
 - 2 ret(*|!<v1>) L5      PREV:[]
 L5:
     <END>                NEXT:[<SINK>]               PREV:[]
 error:
     <ERROR>              PREV:[]
 sink:
-    <SINK>               PREV:[<ERROR>, <END>]
+    <SINK>               PREV:[<ERROR>, <END>, ret(*|<v0>) L1]
 =====================

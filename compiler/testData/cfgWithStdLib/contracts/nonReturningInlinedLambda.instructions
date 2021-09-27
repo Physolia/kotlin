@@ -119,13 +119,13 @@ L4:
     mark(myRun { return@outer Unit })
     call(myRun { return@outer Unit }, myRun|<v0>) -> <v1>
 L6 [before inlined declaration]:
-    inlined({ return@outer Unit })                           NEXT:[<SINK>]
+    inlined({ return@outer Unit })                           NEXT:[<END>, <SINK>]
 L7 [after inlined declaration]:
 -   r(y) -> <v2>                                             PREV:[]
 -   mark(println(y))                                         PREV:[]
 -   call(println(y), println|<v2>) -> <v3>                   PREV:[]
 L5:
-  3 <END>                                                    NEXT:[<SINK>]                                                   PREV:[ret(*|<v0>) L5]
+  3 <END>                                                    NEXT:[<SINK>]                                                   PREV:[inlined({ return@outer Unit })]
 error:
 -   <ERROR>                                                  PREV:[]
 sink:
@@ -138,11 +138,11 @@ L8:
   5 <START>
   6 mark(return@outer Unit)
     r(Unit) -> <v0>
-    ret(*|<v0>) L5             NEXT:[<END>]
+    ret(*|<v0>) L5             NEXT:[<SINK>]
 L9:
 - 5 <END>                      NEXT:[<SINK>]                     PREV:[]
 error:
 -   <ERROR>                    PREV:[]
 sink:
--   <SINK>                     PREV:[]
+    <SINK>                     PREV:[ret(*|<v0>) L5]
 =====================

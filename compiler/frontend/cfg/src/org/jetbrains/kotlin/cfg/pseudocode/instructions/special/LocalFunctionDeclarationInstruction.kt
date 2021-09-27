@@ -24,6 +24,7 @@ import org.jetbrains.kotlin.cfg.pseudocode.instructions.Instruction
 import org.jetbrains.kotlin.cfg.pseudocode.instructions.InstructionVisitor
 import org.jetbrains.kotlin.cfg.pseudocode.instructions.InstructionVisitorWithResult
 import org.jetbrains.kotlin.cfg.pseudocode.instructions.InstructionImpl
+import org.jetbrains.kotlin.cfg.pseudocode.instructions.jumps.AbstractJumpInstruction
 
 open class LocalFunctionDeclarationInstruction(
     element: KtElement,
@@ -35,14 +36,15 @@ open class LocalFunctionDeclarationInstruction(
             field = outgoingEdgeTo(value) as SubroutineSinkInstruction?
         }
 
+    var nonLocalJumps: Collection<Instruction> = emptyList()
+        set(value) {
+            field = value.mapNotNull(::outgoingEdgeTo)
+        }
+
     override val nextInstructions: Collection<Instruction>
-        get() {
-            sink?.let {
-                val instructions = arrayListOf<Instruction>(it)
-                instructions.addAll(super.nextInstructions)
-                return instructions
-            }
-            return super.nextInstructions
+        get() = ArrayList(nonLocalJumps).apply {
+            sink?.let { add(it) }
+            next?.let { add(it) }
         }
 
     override fun accept(visitor: InstructionVisitor) {

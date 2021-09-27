@@ -101,7 +101,7 @@ L11 ['if' expression result]:
     r(n) -> <v16>
     mark({ return it })
     jmp?(L12)                                                                                                             NEXT:[r({ return it }) -> <v17>, d({ return it })]
-    d({ return it })                                                                                                      NEXT:[<SINK>]
+    d({ return it })                                                                                                      NEXT:[<END>, <SINK>]
 L12 [after local declaration]:
     r({ return it }) -> <v17>                                                                                             PREV:[jmp?(L12)]
     mark(let { return it })
@@ -169,7 +169,7 @@ L29 [copy of L8, body exit point]:
     ret(*|<v12>) L1                                                                                                       NEXT:[<END>]
 - 2 merge(try { if (n < 0) return 0 n.let { return it } } finally { for (i in 1..2) { } return bar() }|<v18>) -> <v19>    PREV:[]
 L1:
-  1 <END>                                                                                                                 NEXT:[<SINK>]                                                                                                    PREV:[ret(*|<v12>) L1, ret(*|<v12>) L1, ret(*|<v12>) L1, ret(*|<v12>) L1]
+  1 <END>                                                                                                                 NEXT:[<SINK>]                                                                                                    PREV:[ret(*|<v12>) L1, ret(*|<v12>) L1, ret(*|<v12>) L1, ret(*|<v12>) L1, d({ return it })]
 error:
     <ERROR>                                                                                                               PREV:[]
 sink:

@@ -175,19 +175,19 @@ L0:
     mark(myRun outer@ { myRun middle@ { x.myLet inner@ { if (it == null) { return@outer Unit } else { return@outer Unit } } } // Possible to report unreachable here y = 54 })
     call(myRun outer@ { myRun middle@ { x.myLet inner@ { if (it == null) { return@outer Unit } else { return@outer Unit } } } // Possible to report unreachable here y = 54 }, myRun|<v1>) -> <v2>
 L2 [before inlined declaration]:
-    inlined({ myRun middle@ { x.myLet inner@ { if (it == null) { return@outer Unit } else { return@outer Unit } } } // Possible to report unreachable here y = 54 })
+    inlined({ myRun middle@ { x.myLet inner@ { if (it == null) { return@outer Unit } else { return@outer Unit } } } // Possible to report unreachable here y = 54 })                                                                                                                                                                                                                                                                                                                    NEXT:[<SINK>]
 L3 [after inlined declaration]:
-    mark(y.inc())
-    r(y) -> <v3>
-    mark(inc())
-    call(inc(), inc|<v3>) -> <v4>
-    ret(*|<v4>) L1
+-   mark(y.inc())                                                                                                                                                                                                                                                                                                                                                                                                                                                                       PREV:[]
+-   r(y) -> <v3>                                                                                                                                                                                                                                                                                                                                                                                                                                                                        PREV:[]
+-   mark(inc())                                                                                                                                                                                                                                                                                                                                                                                                                                                                         PREV:[]
+-   call(inc(), inc|<v3>) -> <v4>                                                                                                                                                                                                                                                                                                                                                                                                                                                       PREV:[]
+-   ret(*|<v4>) L1                                                                                                                                                                                                                                                                                                                                                                                                                                                                      PREV:[]
 L1:
-  1 <END>                                                                                                                                                                                                                                                                                                                                                                                                                                                                               NEXT:[<SINK>]
+  1 <END>                                                                                                                                                                                                                                                                                                                                                                                                                                                                               NEXT:[<SINK>]                                                                                                                                                                                                                                                                                                                                                                                                                                                                              PREV:[]
 error:
     <ERROR>                                                                                                                                                                                                                                                                                                                                                                                                                                                                             PREV:[]
 sink:
-    <SINK>                                                                                                                                                                                                                                                                                                                                                                                                                                                                              PREV:[<ERROR>, <END>]
+    <SINK>                                                                                                                                                                                                                                                                                                                                                                                                                                                                              PREV:[<ERROR>, <END>, inlined({ myRun middle@ { x.myLet inner@ { if (it == null) { return@outer Unit } else { return@outer Unit } } } // Possible to report unreachable here y = 54 })]
 =====================
 == inlined anonymous_2 ==
 {
@@ -219,11 +219,11 @@ L7 [after inlined declaration]:
 -   r(54) -> <v2>                                                                                                                                                PREV:[]
 -   w(y|<v2>)                                                                                                                                                    PREV:[]
 L5:
-  3 <END>                                                                                                                                                        NEXT:[<SINK>]                                                                                                                                                       PREV:[ret(*|<v3>) L5, ret(*|<v5>) L5]
+- 3 <END>                                                                                                                                                        NEXT:[<SINK>]                                                                                                                                                       PREV:[]
 error:
 -   <ERROR>                                                                                                                                                      PREV:[]
 sink:
-    <SINK>                                                                                                                                                       PREV:[<END>, inlined({ x.myLet inner@ { if (it == null) { return@outer Unit } else { return@outer Unit } } })]
+    <SINK>                                                                                                                                                       PREV:[inlined({ x.myLet inner@ { if (it == null) { return@outer Unit } else { return@outer Unit } } })]
 =====================
 == inlined anonymous_3 ==
 {
@@ -248,7 +248,7 @@ L8:
     mark(myLet inner@ { if (it == null) { return@outer Unit } else { return@outer Unit } })
     call(myLet inner@ { if (it == null) { return@outer Unit } else { return@outer Unit } }, myLet|<v0>, <v1>) -> <v2>
 L10 [before inlined declaration]:
-    inlined({ if (it == null) { return@outer Unit } else { return@outer Unit } })                                        NEXT:[<SINK>]
+    inlined({ if (it == null) { return@outer Unit } else { return@outer Unit } })                                        NEXT:[<SINK>, <SINK>]
 L9:
 L11 [after inlined declaration]:
 - 5 <END>                                                                                                                NEXT:[<SINK>]                                                                                                               PREV:[]
@@ -278,12 +278,12 @@ L12:
     jf(L14|<v2>)                                                                                    NEXT:[mark({ return@outer Unit }), mark({ return@outer Unit })]
   9 mark({ return@outer Unit })
     r(Unit) -> <v3>
-    ret(*|<v3>) L5                                                                                  NEXT:[<END>]
+    ret(*|<v3>) L5                                                                                  NEXT:[<SINK>]
 - 8 jmp(L15)                                                                                        NEXT:[merge(if (it == null) { return@outer Unit } else { return@outer Unit }|!<v4>, !<v6>) -> <v7>]    PREV:[]
 L14 [else branch]:
   9 mark({ return@outer Unit })                                                                     PREV:[jf(L14|<v2>)]
     r(Unit) -> <v5>
-    ret(*|<v5>) L5                                                                                  NEXT:[<END>]
+    ret(*|<v5>) L5                                                                                  NEXT:[<SINK>]
 L15 ['if' expression result]:
 - 8 merge(if (it == null) { return@outer Unit } else { return@outer Unit }|!<v4>, !<v6>) -> <v7>    PREV:[]
 L13:
@@ -291,5 +291,5 @@ L13:
 error:
 -   <ERROR>                                                                                         PREV:[]
 sink:
--   <SINK>                                                                                          PREV:[]
+    <SINK>                                                                                          PREV:[ret(*|<v3>) L5, ret(*|<v5>) L5]
 =====================

@@ -50,6 +50,7 @@ import org.jetbrains.kotlin.resolve.BindingContext.USED_AS_EXPRESSION
 import org.jetbrains.kotlin.resolve.BindingTrace
 import org.jetbrains.kotlin.resolve.CompileTimeConstantUtils
 import org.jetbrains.kotlin.resolve.bindingContextUtil.getEnclosingFunctionDescriptor
+import org.jetbrains.kotlin.resolve.bindingContextUtil.getParentOfTypeCodeFragmentAware
 import org.jetbrains.kotlin.resolve.calls.callUtil.getResolvedCall
 import org.jetbrains.kotlin.resolve.calls.model.ArgumentMatch
 import org.jetbrains.kotlin.resolve.calls.model.ResolvedCall
@@ -58,6 +59,7 @@ import org.jetbrains.kotlin.resolve.calls.tasks.ExplicitReceiverKind
 import org.jetbrains.kotlin.resolve.calls.tower.getFakeDescriptorForObject
 import org.jetbrains.kotlin.resolve.calls.util.FakeCallableDescriptorForObject
 import org.jetbrains.kotlin.resolve.constants.evaluate.ConstantExpressionEvaluator
+import org.jetbrains.kotlin.resolve.inline.InlineUtil
 import org.jetbrains.kotlin.resolve.scopes.receivers.*
 import org.jetbrains.kotlin.types.expressions.DoubleColonLHS
 import org.jetbrains.kotlin.types.expressions.OperatorConventions
@@ -922,20 +924,31 @@ class ControlFlowProcessor(
 
             val labelExprEnclosingFunc = getEnclosingFunctionDescriptor(bindingContext, jumpExpression)
             val labelTargetEnclosingFunc = getEnclosingFunctionDescriptor(bindingContext, jumpTarget)
-            return if (labelExprEnclosingFunc !== labelTargetEnclosingFunc) {
-                // Check to report only once
-                if (builder.getLoopExitPoint(jumpTarget) != null ||
-                    // Local class secondary constructors are handled differently
-                    // They are the only local class element NOT included in owner pseudocode
-                    // See generateInitializersForClassOrObject && generateDeclarationForLocalClassOrObjectIfNeeded
-                    labelExprEnclosingFunc is ConstructorDescriptor && !labelExprEnclosingFunc.isPrimary
-                ) {
-                    trace.report(BREAK_OR_CONTINUE_JUMPS_ACROSS_FUNCTION_BOUNDARY.on(jumpExpression))
+            if (labelTargetEnclosingFunc === labelExprEnclosingFunc) return true
+
+            val labelExprEnclosingElement = jumpExpression.getParentOfTypeCodeFragmentAware(KtFunction::class.java, KtClassOrObject::class.java)
+            val maybeFromInlineFunction =
+                labelTargetEnclosingFunc != null && InlineUtil.checkNonLocalReturnUsage(
+                    labelTargetEnclosingFunc, labelExprEnclosingFunc, labelExprEnclosingElement, bindingContext
+                )
+
+            if (maybeFromInlineFunction) {
+                // Explicitly labeled non-local jumps are OK, but unlabeled ones are currently disallowed due to
+                // possible confusion about what interactions with functions like `forEach`.
+                if (jumpExpression.getTargetLabel() == null) {
+                    trace.report(UNLABELED_NON_LOCAL_BREAK_OR_CONTINUE.on(jumpExpression))
                 }
-                false
-            } else {
-                true
+                return true
             }
+
+            // Check to report only once
+            if (builder.getLoopExitPoint(jumpTarget) != null ||
+                // Local class secondary constructors are handled differently
+                // They are the only local class element NOT included in owner pseudocode
+                // See generateInitializersForClassOrObject && generateDeclarationForLocalClassOrObjectIfNeeded
+                labelExprEnclosingFunc is ConstructorDescriptor && !labelExprEnclosingFunc.isPrimary
+            ) trace.report(BREAK_OR_CONTINUE_JUMPS_ACROSS_FUNCTION_BOUNDARY.on(jumpExpression))
+            return false
         }
 
         override fun visitReturnExpression(expression: KtReturnExpression) {

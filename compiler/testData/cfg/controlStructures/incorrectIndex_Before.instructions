@@ -51,7 +51,7 @@ L0:
     r(name) -> <v2>
     mark({ if (flag) { s.add(it) } else { s.remove(it) } return true })
     jmp?(L4)                                                                                                                                          NEXT:[r({ if (flag) { s.add(it) } else { s.remove(it) } return true }) -> <v3>, d({ if (flag) { s.add(it) } else { s.remove(it) } return true })]
-    d({ if (flag) { s.add(it) } else { s.remove(it) } return true })                                                                                  NEXT:[<SINK>]
+    d({ if (flag) { s.add(it) } else { s.remove(it) } return true })                                                                                  NEXT:[<END>, <SINK>]
 L4 [after local declaration]:
     r({ if (flag) { s.add(it) } else { s.remove(it) } return true }) -> <v3>                                                                          PREV:[jmp?(L4)]
     mark(let { if (flag) { s.add(it) } else { s.remove(it) } return true })
@@ -88,7 +88,7 @@ L13 [skipFinallyToErrorBlock]:
 L15 [copy of L10, result of call]:
 - 2 merge(try { name?.let { if (flag) { s.add(it) } else { s.remove(it) } return true } return false } finally { name?.hashCode() }|!<v6>) -> <v7>    PREV:[]
 L1:
-  1 <END>                                                                                                                                             NEXT:[<SINK>]                                                                                                                                                              PREV:[ret(*|<v10>) L1, ret(*|<v5>) L1]
+  1 <END>                                                                                                                                             NEXT:[<SINK>]                                                                                                                                                              PREV:[ret(*|<v10>) L1, ret(*|<v5>) L1, d({ if (flag) { s.add(it) } else { s.remove(it) } return true })]
 error:
     <ERROR>                                                                                                                                           PREV:[jmp(error)]
 sink:

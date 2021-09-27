@@ -187,6 +187,11 @@ public class PseudoValueTestGenerated extends AbstractPseudoValueTest {
                 KtTestUtil.assertAllTestsPresentByMetadataWithExcluded(this.getClass(), new File("compiler/testData/cfg/controlStructures"), Pattern.compile("^(.+)\\.kt$"), null, true);
             }
 
+            @TestMetadata("breakContinueInSubroutine.kt")
+            public void testBreakContinueInSubroutine() throws Exception {
+                runTest("compiler/testData/cfg/controlStructures/breakContinueInSubroutine.kt");
+            }
+
             @TestMetadata("breakContinueInTryFinally.kt")
             public void testBreakContinueInTryFinally() throws Exception {
                 runTest("compiler/testData/cfg/controlStructures/breakContinueInTryFinally.kt");

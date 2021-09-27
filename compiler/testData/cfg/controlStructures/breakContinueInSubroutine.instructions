@@ -1,0 +1,103 @@
+== foo ==
+inline fun foo(x: () -> Unit): Unit = TODO()
+---------------------
+L0:
+  1 <START>
+    v(x: () -> Unit)
+    magic[FAKE_INITIALIZER](x: () -> Unit) -> <v0>
+    w(x|<v0>)
+    mark(TODO())
+    call(TODO(), TODO) -> <v1>
+    jmp(error)                                        NEXT:[<ERROR>]
+-   ret(*|<v1>) L1                                    PREV:[]
+L1:
+    <END>                                             NEXT:[<SINK>]                                            PREV:[]
+error:
+    <ERROR>                                           PREV:[jmp(error)]
+sink:
+    <SINK>                                            PREV:[<ERROR>, <END>]
+=====================
+== test ==
+fun test(): String {
+    var result = "OK"
+    loop@ while (true) {
+        foo { break@loop }
+        foo { continue@loop }
+        result = "..."
+    }
+    return result
+}
+---------------------
+L0:
+  1 <START>
+  2 mark({ var result = "OK" loop@ while (true) { foo { break@loop } foo { continue@loop } result = "..." } return result })
+    v(var result = "OK")
+    mark("OK")
+    r("OK") -> <v0>
+    w(result|<v0>)
+    mark(loop@ while (true) { foo { break@loop } foo { continue@loop } result = "..." })
+L2 [loop entry point]:
+L6 [condition entry point]:
+    r(true) -> <v1>                                                                                                             PREV:[mark(loop@ while (true) { foo { break@loop } foo { continue@loop } result = "..." }), d({ continue@loop }), jmp(L2)]
+    mark(while (true) { foo { break@loop } foo { continue@loop } result = "..." })
+    magic[VALUE_CONSUMER](true|<v1>) -> <v2>
+L4 [body entry point]:
+  3 mark({ foo { break@loop } foo { continue@loop } result = "..." })
+    mark({ break@loop })
+    jmp?(L7)                                                                                                                    NEXT:[r({ break@loop }) -> <v3>, d({ break@loop })]
+    d({ break@loop })                                                                                                           NEXT:[read (Unit), <SINK>]
+L7 [after local declaration]:
+    r({ break@loop }) -> <v3>                                                                                                   PREV:[jmp?(L7)]
+    mark(foo { break@loop })
+    call(foo { break@loop }, foo|<v3>) -> <v4>
+    mark({ continue@loop })
+    jmp?(L10)                                                                                                                   NEXT:[r({ continue@loop }) -> <v5>, d({ continue@loop })]
+    d({ continue@loop })                                                                                                        NEXT:[r(true) -> <v1>, <SINK>]
+L10 [after local declaration]:
+    r({ continue@loop }) -> <v5>                                                                                                PREV:[jmp?(L10)]
+    mark(foo { continue@loop })
+    call(foo { continue@loop }, foo|<v5>) -> <v6>
+    mark("...")
+    r("...") -> <v7>
+    w(result|<v7>)
+  2 jmp(L2)                                                                                                                     NEXT:[r(true) -> <v1>]
+L3 [loop exit point]:
+L5 [body exit point]:
+    read (Unit)                                                                                                                 PREV:[d({ break@loop })]
+    r(result) -> <v10>
+    ret(*|<v10>) L1
+L1:
+  1 <END>                                                                                                                       NEXT:[<SINK>]
+error:
+    <ERROR>                                                                                                                     PREV:[]
+sink:
+    <SINK>                                                                                                                      PREV:[<ERROR>, <END>, d({ break@loop }), d({ continue@loop })]
+=====================
+== anonymous_0 ==
+{ break@loop }
+---------------------
+L8:
+  4 <START>
+  5 mark(break@loop)
+    jmp(L3)             NEXT:[<SINK>]
+L9:
+  4 <END>               NEXT:[<SINK>]              PREV:[]
+error:
+    <ERROR>             PREV:[]
+sink:
+    <SINK>              PREV:[<ERROR>, <END>, jmp(L3)]
+=====================
+== anonymous_1 ==
+{ continue@loop }
+---------------------
+L11:
+  4 <START>
+  5 mark(continue@loop)
+    jmp(L6)                NEXT:[<SINK>]
+L12:
+  4 <END>                  NEXT:[<SINK>]                 PREV:[]
+error:
+    <ERROR>                PREV:[]
+sink:
+    <SINK>                 PREV:[<ERROR>, <END>, jmp(L6)]
+=====================

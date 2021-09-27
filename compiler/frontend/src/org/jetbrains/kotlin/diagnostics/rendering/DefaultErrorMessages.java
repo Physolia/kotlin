@@ -686,6 +686,7 @@ public class DefaultErrorMessages {
         MAP.put(BREAK_OR_CONTINUE_OUTSIDE_A_LOOP, "'break' and 'continue' are only allowed inside a loop");
         MAP.put(BREAK_OR_CONTINUE_IN_WHEN, "'break' and 'continue' are not allowed in 'when' statements. Consider using labels to continue/break from the outer loop");
         MAP.put(BREAK_OR_CONTINUE_JUMPS_ACROSS_FUNCTION_BOUNDARY, "'break' or 'continue' jumps across a function or a class boundary");
+        MAP.put(UNLABELED_NON_LOCAL_BREAK_OR_CONTINUE, "'break' or 'continue' that jumps across an inline lambda boundary must have an explicit label");
         MAP.put(NOT_A_LOOP_LABEL, "The label ''{0}'' does not denote a loop", STRING);
 
         MAP.put(NOT_A_FUNCTION_LABEL, "Target label does not denote a function");

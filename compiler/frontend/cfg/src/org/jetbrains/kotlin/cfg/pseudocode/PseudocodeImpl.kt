@@ -282,16 +282,14 @@ class PseudocodeImpl(override val correspondingElement: KtElement, override val 
                 val body = instruction.body as PseudocodeImpl
                 body.parent = this@PseudocodeImpl
                 body.postProcess()
-                instruction.next = sinkInstruction
-            }
-
-            override fun visitInlinedLocalFunctionDeclarationInstruction(instruction: InlinedLocalFunctionDeclarationInstruction) {
-                val body = instruction.body as PseudocodeImpl
-                body.parent = this@PseudocodeImpl
-                body.postProcess()
-                // Don't add edge to next instruction if flow can't reach exit of inlined declaration
-                instruction.next =
-                        if (body.instructions.contains(body.exitInstruction)) getNextPosition(currentPosition) else sinkInstruction
+                val canTerminate = instruction is InlinedLocalFunctionDeclarationInstruction && body.exitInstruction in body.instructions
+                instruction.next = if (canTerminate) getNextPosition(currentPosition) else sinkInstruction
+                instruction.nonLocalJumps = body.instructions.mapNotNullTo(HashSet()) {
+                    if (it is AbstractJumpInstruction && it.targetLabel.pseudocode !== body)
+                        getJumpTarget(it.targetLabel)
+                    else
+                        null
+                }
             }
 
             override fun visitSubroutineExit(instruction: SubroutineExitInstruction) {
@@ -342,7 +340,11 @@ class PseudocodeImpl(override val correspondingElement: KtElement, override val 
         }
     }
 
-    private fun getJumpTarget(targetLabel: Label): Instruction = targetLabel.resolveToInstruction()
+    private fun getJumpTarget(targetLabel: Label): Instruction =
+        if (targetLabel.pseudocode === this)
+            targetLabel.resolveToInstruction()
+        else
+            sinkInstruction
 
     private fun getNextPosition(currentPosition: Int): Instruction {
         val targetPosition = currentPosition + 1

@@ -947,6 +947,7 @@ public interface Errors {
     DiagnosticFactory0<KtExpressionWithLabel> BREAK_OR_CONTINUE_OUTSIDE_A_LOOP = DiagnosticFactory0.create(ERROR);
     DiagnosticFactory0<KtExpressionWithLabel> BREAK_OR_CONTINUE_IN_WHEN = DiagnosticFactory0.create(ERROR);
     DiagnosticFactory0<KtExpressionWithLabel> BREAK_OR_CONTINUE_JUMPS_ACROSS_FUNCTION_BOUNDARY = DiagnosticFactory0.create(ERROR);
+    DiagnosticFactory0<KtExpressionWithLabel> UNLABELED_NON_LOCAL_BREAK_OR_CONTINUE = DiagnosticFactory0.create(ERROR);
     DiagnosticFactory1<KtExpressionWithLabel, String> NOT_A_LOOP_LABEL = DiagnosticFactory1.create(ERROR);
 
     DiagnosticFactory0<KtExpressionWithLabel> NOT_A_FUNCTION_LABEL = DiagnosticFactory0.create(ERROR);

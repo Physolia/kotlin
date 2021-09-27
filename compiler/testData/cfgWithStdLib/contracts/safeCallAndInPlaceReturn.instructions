@@ -74,11 +74,11 @@ L0:
     mark(myRun { return "" })
     call(myRun { return "" }, myRun|<v1>, <v2>) -> <v3>
 L3 [before inlined declaration]:
-    inlined({ return "" })                                    NEXT:[<SINK>]
+    inlined({ return "" })                                    NEXT:[<END>, <SINK>]
 L1:
 L2 [result of call]:
 L4 [after inlined declaration]:
-  1 <END>                                                     NEXT:[<SINK>]                                                    PREV:[jf(L2), ret(*|<v0>) L1]
+  1 <END>                                                     NEXT:[<SINK>]                                                    PREV:[jf(L2), inlined({ return "" })]
 error:
     <ERROR>                                                   PREV:[]
 sink:
@@ -94,11 +94,11 @@ L5:
   4 mark(return "")
     mark("")
     r("") -> <v0>
-    ret(*|<v0>) L1     NEXT:[<END>]
+    ret(*|<v0>) L1     NEXT:[<SINK>]
 L6:
 - 3 <END>              NEXT:[<SINK>]             PREV:[]
 error:
 -   <ERROR>            PREV:[]
 sink:
--   <SINK>             PREV:[]
+    <SINK>             PREV:[ret(*|<v0>) L1]
 =====================
